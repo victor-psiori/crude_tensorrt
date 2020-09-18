@@ -7,11 +7,11 @@ set(CMAKE_MODULE_PATH
 project(inference_in_trt)
 
 find_package(CUDA REQUIRED)
-find_package(TensorRT REQUIRED)
+find_package(TENSORRT REQUIRED)
 find_package(Threads)
 find_package(OpenCV REQUIRED)
 
 # TARGETS ------------------------------------------
 add_executable(inference_in_trt inference_in_trt.cpp)
-target_include_directories(inference_in_trt PUBLIC ${CUDA_INCLUDE_DIRS} ${TensorRT_INCLUDE_DIRS})
-target_link_libraries(inference_in_trt PUBLIC ${CUDA_LIBRARIES}  ${TensorRT_LIBRARIES})
+target_include_directories(inference_in_trt PUBLIC ${CUDA_INCLUDE_DIRS} ${TENSORRT_INCLUDE_DIRS})
+target_link_libraries(inference_in_trt PUBLIC ${CUDA_LIBRARIES}  ${TENSORRT_LIBRARIES})
