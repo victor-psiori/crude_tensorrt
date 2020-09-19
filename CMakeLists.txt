@@ -12,7 +12,7 @@ find_package(Threads)
 find_package(OpenCV REQUIRED)
 
 # TARGETS ------------------------------------------
-set(SOURCES src/inference_in_trt.cpp src/inference_in_trt.hpp)
+set(SOURCES src/main.cpp src/inference_in_trt.cpp src/inference_in_trt.hpp)
 add_executable(inference_in_trt ${SOURCES})
 target_include_directories(inference_in_trt PUBLIC ${CUDA_INCLUDE_DIRS} ${TENSORRT_INCLUDE_DIRS})
 target_link_libraries(inference_in_trt PUBLIC ${CUDA_LIBRARIES}  ${TENSORRT_LIBRARIES})
