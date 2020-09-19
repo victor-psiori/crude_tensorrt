@@ -13,6 +13,7 @@ TrtObjectDetector::TrtObjectDetector(const std::string filename) :
 		extractContentsToBuffer(file, trtModelStreamFromFile);
 		Logger gLogger;
 		
+		initLibNvInferPlugins(&gLogger, "");
 		TRTUniquePtr<nvinfer1::IRuntime> runtime{nvinfer1::createInferRuntime(gLogger)};
 		assert(runtime != nullptr);
 		
