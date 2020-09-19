@@ -43,3 +43,4 @@ TrtObjectDetector::~TrtObjectDetector() {
 
 
 
+//corrected indentation
