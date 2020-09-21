@@ -42,20 +42,21 @@ void TrtObjectDetector::extractContentsToBuffer(
 }
 
 bool TrtObjectDetector::infer() {
+	int batch_size = 1;
 	// get sizes of input and output and allocate memory required for input data and for output data
   std::vector<nvinfer1::Dims> input_dims; // we expect only one input
   std::vector<nvinfer1::Dims> output_dims; // and one output
   std::vector<void*> buffers(mEngine->getNbBindings()); // buffers for input and output data
-  // for (size_t i = 0; i < mEngine->getNbBindings(); ++i) {
-  //   auto binding_size = getSizeByDim(mEngine->getBindingDimensions(i)) * batch_size * sizeof(float);
-  //   cudaMalloc(&buffers[i], binding_size);
-  //   if (mEngine->bindingIsInput(i)) {
-  //     input_dims.emplace_back(mEngine->getBindingDimensions(i));
-  //   }
-  //   else {
-  //     output_dims.emplace_back(mEngine->getBindingDimensions(i));
-  //   }
-  // }
+  for (size_t i = 0; i < mEngine->getNbBindings(); ++i) {
+    auto binding_size = getSizeByDim(mEngine->getBindingDimensions(i)) * batch_size * sizeof(float);
+    cudaMalloc(&buffers[i], binding_size);
+    if (mEngine->bindingIsInput(i)) {
+      input_dims.emplace_back(mEngine->getBindingDimensions(i));
+    }
+    else {
+      output_dims.emplace_back(mEngine->getBindingDimensions(i));
+    }
+  }
   if (input_dims.empty() || output_dims.empty()) {
 	  std::cerr << "Expect at least one input and one output for network\n";
 	  return false;
@@ -63,6 +64,15 @@ bool TrtObjectDetector::infer() {
 
   return true;
 }	//end infer
+
+// calculate size of tensor
+size_t TrtObjectDetector::getSizeByDim(const nvinfer1::Dims& dims) {
+  size_t size = 1;
+  for (size_t i = 0; i < dims.nbDims; ++i) {
+    size *= dims.d[i];
+  }
+  return size;
+}
 
 
 TrtObjectDetector::~TrtObjectDetector() {

@@ -8,7 +8,7 @@
 #include <memory>
 #include <NvInfer.h>
 #include <NvInferPlugin.h>
-
+#include <cuda_runtime_api.h>
 //TensorRT common/ headers
 // #include "argsParser.h"
 // #include "buffers.h"
@@ -58,6 +58,8 @@ public:
 	void extractContentsToBuffer(std::ifstream& file, std::vector <char>& buf);
 
 	bool infer();
+
+	size_t getSizeByDim(const nvinfer1::Dims& dims);
 
 
 private:
