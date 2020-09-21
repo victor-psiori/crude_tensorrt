@@ -9,6 +9,12 @@
 #include <NvInfer.h>
 #include <NvInferPlugin.h>
 
+//TensorRT common/ headers
+// #include "argsParser.h"
+// #include "buffers.h"
+// #include "common.h"
+// #include "logger.h"
+
 namespace autocrane {
 
 class Logger : public nvinfer1::ILogger {
@@ -36,6 +42,7 @@ struct TRTDestroy{
 	}
 };
 
+
 template<typename T>
 using TRTUniquePtr = std::unique_ptr<T, TRTDestroy>;
 
@@ -50,12 +57,15 @@ public:
 	*/
 	void extractContentsToBuffer(std::ifstream& file, std::vector <char>& buf);
 
+	bool infer();
+
 
 private:
 	std::string engineFile;
 	std::size_t size_engine;
 	// nvinfer1::ICudaEngine* mEngine;
 	TRTUniquePtr<nvinfer1::ICudaEngine> mEngine;
+	TRTUniquePtr<nvinfer1::IExecutionContext> mContext;
 };
 
 }; // namespace autocrane

@@ -19,6 +19,13 @@ TrtObjectDetector::TrtObjectDetector(const std::string filename) :
 		
 		mEngine = TRTUniquePtr<nvinfer1::ICudaEngine>(
 			runtime->deserializeCudaEngine(trtModelStreamFromFile.data(), size_engine));
+		assert(mEngine != nullptr);
+
+		int max_batch_size = mEngine->getMaxBatchSize();
+		cout << "max_batch_size: " << max_batch_size << endl;
+
+		mContext = TRTUniquePtr<nvinfer1::IExecutionContext>(
+			mEngine->createExecutionContext());
 }
 
 void TrtObjectDetector::extractContentsToBuffer(
@@ -34,13 +41,33 @@ void TrtObjectDetector::extractContentsToBuffer(
 	}
 }
 
+bool TrtObjectDetector::infer() {
+	// get sizes of input and output and allocate memory required for input data and for output data
+  std::vector<nvinfer1::Dims> input_dims; // we expect only one input
+  std::vector<nvinfer1::Dims> output_dims; // and one output
+  std::vector<void*> buffers(mEngine->getNbBindings()); // buffers for input and output data
+  // for (size_t i = 0; i < mEngine->getNbBindings(); ++i) {
+  //   auto binding_size = getSizeByDim(mEngine->getBindingDimensions(i)) * batch_size * sizeof(float);
+  //   cudaMalloc(&buffers[i], binding_size);
+  //   if (mEngine->bindingIsInput(i)) {
+  //     input_dims.emplace_back(mEngine->getBindingDimensions(i));
+  //   }
+  //   else {
+  //     output_dims.emplace_back(mEngine->getBindingDimensions(i));
+  //   }
+  // }
+  if (input_dims.empty() || output_dims.empty()) {
+	  std::cerr << "Expect at least one input and one output for network\n";
+	  return false;
+  }
+
+  return true;
+}	//end infer
+
+
 TrtObjectDetector::~TrtObjectDetector() {
 }
 
 
 
 }	//namespace autocrane
-
-
-
-//corrected indentationl
