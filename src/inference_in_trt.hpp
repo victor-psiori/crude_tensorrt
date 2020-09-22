@@ -10,10 +10,10 @@
 #include <NvInferPlugin.h>
 #include <cuda_runtime_api.h>
 //TensorRT common/ headers
-// #include "argsParser.h"
-// #include "buffers.h"
-// #include "common.h"
-// #include "logger.h"
+#include "argsParser.h"
+#include "buffers.h"
+#include "common.h"
+#include "logger.h"
 
 namespace autocrane {
 
@@ -61,6 +61,8 @@ public:
 
 	size_t getSizeByDim(const nvinfer1::Dims& dims);
 
+	bool processInput(const samplesCommon::BufferManager& buffers);
+
 
 private:
 	std::string engineFile;
@@ -68,6 +70,8 @@ private:
 	// nvinfer1::ICudaEngine* mEngine;
 	TRTUniquePtr<nvinfer1::ICudaEngine> mEngine;
 	TRTUniquePtr<nvinfer1::IExecutionContext> mContext;
+	nvinfer1::Dims mInputDims; // dimension of input to network
+	std::vector<samplesCommon::PPM<3, 150, 150>> mPPMs; //!< PPMs of test images
 };
 
 }; // namespace autocrane

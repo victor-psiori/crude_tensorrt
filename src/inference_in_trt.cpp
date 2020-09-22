@@ -41,26 +41,47 @@ void TrtObjectDetector::extractContentsToBuffer(
 	}
 }
 
+//!
+//! \brief Reads the input and mean data, preprocesses, and stores the result in a managed buffer
+//!
+bool TrtObjectDetector::processInput(const samplesCommon::BufferManager& buffers) {
+	const int inputC = mInputDims.d[0];
+	const int inputH = mInputDims.d[1];
+	const int inputW = mInputDims.d[2];
+	const int batchSize = 1;
+
+	// Available images
+	std::vector<std::string> imageList = {"grapple_1357.jpg"};
+	mPPMs.resize(batchSize);
+	assert(mPPMs.size() <= imageList.size());
+	for (int i=0; i<batchSize; ++i) {
+		readPPMFile(locateFile(imageList[i], "../assets/"), mPPMs[i]);
+	}
+	//fill data buffer
+	float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer("data"));
+	float pixelMean[3]{104.0f, 117.0f, 123.0f}; // In BGR order
+  // Host memory for input buffer
+  int volImg = inputC * inputH * inputW;
+  int volChl = inputH * inputW;
+  for (int i = 0; i < batchSize; ++i) {
+    for (int c = 0; c < inputC; ++c) {
+      // The color image to input should be in BGR order
+      for (unsigned j = 0; j < volChl; ++j) {
+        hostDataBuffer[i * volImg + c * volChl + j] = float(mPPMs[i].buffer[j * inputC + 2 - c]);
+      }
+    }
+  }
+
+  return true;
+}
+
 bool TrtObjectDetector::infer() {
 	int batch_size = 1;
 	// get sizes of input and output and allocate memory required for input data and for output data
   std::vector<nvinfer1::Dims> input_dims; // we expect only one input
   std::vector<nvinfer1::Dims> output_dims; // and one output
   std::vector<void*> buffers(mEngine->getNbBindings()); // buffers for input and output data
-  for (size_t i = 0; i < mEngine->getNbBindings(); ++i) {
-    auto binding_size = getSizeByDim(mEngine->getBindingDimensions(i)) * batch_size * sizeof(float);
-    cudaMalloc(&buffers[i], binding_size);
-    if (mEngine->bindingIsInput(i)) {
-      input_dims.emplace_back(mEngine->getBindingDimensions(i));
-    }
-    else {
-      output_dims.emplace_back(mEngine->getBindingDimensions(i));
-    }
-  }
-  if (input_dims.empty() || output_dims.empty()) {
-	  std::cerr << "Expect at least one input and one output for network\n";
-	  return false;
-  }
+  
 
   return true;
 }	//end infer
