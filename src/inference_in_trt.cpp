@@ -1,5 +1,4 @@
 #include "inference_in_trt.hpp"
-#include "logger.h"
 #include <cassert>
 
 using namespace std;
@@ -12,12 +11,15 @@ TrtObjectDetector::TrtObjectDetector(const std::string filename) :
 		std::ifstream file(engineFile, std::ios::binary);
 		vector<char> trtModelStreamFromFile;
 		extractContentsToBuffer(file, trtModelStreamFromFile);
-		// Logger gLogger;
+		Logger gLogger;
 		
-		// initLibNvInferPlugins(&gLogger, "");
-		initLibNvInferPlugins(&sample::gLogger.getTRTLogger(), "");
+		initLibNvInferPlugins(&gLogger, "");
+		// using sample::gLogger;
+		// initLibNvInferPlugins(&sample::gLogger.getTRTLogger(), "");
+		// initLibNvInferPlugins(&gLogger.getTRTLogger(), "");
 		// nvinfer1::IRuntime* runtime = createInferRuntime(gLogger);
-		nvinfer1::IRuntime* runtime = createInferRuntime(sample::gLogger.getTRTLogger());
+		// nvinfer1::IRuntime* runtime = createInferRuntime(sample::gLogger.getTRTLogger());
+		nvinfer1::IRuntime* runtime = createInferRuntime(gLogger.getTRTLogger());
 		// TRTUniquePtr<nvinfer1::IRuntime> runtime{nvinfer1::createInferRuntime(gLogger)};
 		assert(runtime != nullptr);
 		
@@ -96,15 +98,15 @@ bool TrtObjectDetector::infer() {
 	}
 
 	//memcpy from host input buffers to device input buffers
-	// buffers.copyInputToDevice();
+	buffers.copyInputToDevice();
 
-	// bool status = mContext->execute(1, buffers.getDeviceBindings().data());
-	// if (!status) {
-	// 	return false;
-	// }
+	bool status = mContext->execute(1, buffers.getDeviceBindings().data());
+	if (!status) {
+		return false;
+	}
 
-	// //memcpy from device output buffers to host output buffers
-	// buffers.copyOutputToHost();
+	//memcpy from device output buffers to host output buffers
+	buffers.copyOutputToHost();
 	return true;
 }	//end infer
 

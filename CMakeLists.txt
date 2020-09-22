@@ -37,6 +37,7 @@ set(SOURCES
 	${TRT_INCLUDE_DIRS}/half.h
 	${TRT_INCLUDE_DIRS}/logger.h
 	${TRT_INCLUDE_DIRS}/logging.h
+	${TRT_INCLUDE_DIRS}/common.h
 	${CMAKE_CURRENT_LIST_DIR}/src/main.cpp 
 	${CMAKE_CURRENT_LIST_DIR}/src/inference_in_trt.cpp 
 	${CMAKE_CURRENT_LIST_DIR}/src/inference_in_trt.hpp 
