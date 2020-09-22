@@ -1,4 +1,5 @@
 #include "inference_in_trt.hpp"
+#include "logger.h"
 #include <cassert>
 
 using namespace std;
@@ -11,21 +12,26 @@ TrtObjectDetector::TrtObjectDetector(const std::string filename) :
 		std::ifstream file(engineFile, std::ios::binary);
 		vector<char> trtModelStreamFromFile;
 		extractContentsToBuffer(file, trtModelStreamFromFile);
-		Logger gLogger;
+		// Logger gLogger;
 		
-		initLibNvInferPlugins(&gLogger, "");
-		TRTUniquePtr<nvinfer1::IRuntime> runtime{nvinfer1::createInferRuntime(gLogger)};
+		// initLibNvInferPlugins(&gLogger, "");
+		initLibNvInferPlugins(&sample::gLogger.getTRTLogger(), "");
+		// nvinfer1::IRuntime* runtime = createInferRuntime(gLogger);
+		nvinfer1::IRuntime* runtime = createInferRuntime(sample::gLogger.getTRTLogger());
+		// TRTUniquePtr<nvinfer1::IRuntime> runtime{nvinfer1::createInferRuntime(gLogger)};
 		assert(runtime != nullptr);
 		
-		mEngine = TRTUniquePtr<nvinfer1::ICudaEngine>(
-			runtime->deserializeCudaEngine(trtModelStreamFromFile.data(), size_engine));
+		// mEngine = TRTUniquePtr<nvinfer1::ICudaEngine>(
+		// 	runtime->deserializeCudaEngine(trtModelStreamFromFile.data(), size_engine), 
+		// 	samplesCommon::InferDeleter());
+		mEngine = std::shared_ptr<nvinfer1::ICudaEngine>(
+				runtime->deserializeCudaEngine(trtModelStreamFromFile.data(), size_engine),
+			  samplesCommon::InferDeleter()
+		  );
 		assert(mEngine != nullptr);
 
 		int max_batch_size = mEngine->getMaxBatchSize();
 		cout << "max_batch_size: " << max_batch_size << endl;
-
-		mContext = TRTUniquePtr<nvinfer1::IExecutionContext>(
-			mEngine->createExecutionContext());
 }
 
 void TrtObjectDetector::extractContentsToBuffer(
@@ -55,7 +61,8 @@ bool TrtObjectDetector::processInput(const samplesCommon::BufferManager& buffers
 	mPPMs.resize(batchSize);
 	assert(mPPMs.size() <= imageList.size());
 	for (int i=0; i<batchSize; ++i) {
-		readPPMFile(locateFile(imageList[i], "../assets/"), mPPMs[i]);
+		// readPPMFile(locateFile(imageList[i], "../assets/"), mPPMs[i]);
+		readPPMFile("../assets/grapple_1357.jpg", mPPMs[i]);
 	}
 	//fill data buffer
 	float* hostDataBuffer = static_cast<float*>(buffers.getHostBuffer("data"));
@@ -76,14 +83,29 @@ bool TrtObjectDetector::processInput(const samplesCommon::BufferManager& buffers
 }
 
 bool TrtObjectDetector::infer() {
-	int batch_size = 1;
-	// get sizes of input and output and allocate memory required for input data and for output data
-  std::vector<nvinfer1::Dims> input_dims; // we expect only one input
-  std::vector<nvinfer1::Dims> output_dims; // and one output
-  std::vector<void*> buffers(mEngine->getNbBindings()); // buffers for input and output data
-  
+	// Create RAII buffer manager object
+  samplesCommon::BufferManager buffers(mEngine, 1);
 
-  return true;
+	auto mContext = SampleUniquePtr<nvinfer1::IExecutionContext>(mEngine->createExecutionContext());
+	if (mContext == nullptr) {
+		return false;
+	}
+
+	if (!processInput(buffers)) {
+		return false;
+	}
+
+	//memcpy from host input buffers to device input buffers
+	// buffers.copyInputToDevice();
+
+	// bool status = mContext->execute(1, buffers.getDeviceBindings().data());
+	// if (!status) {
+	// 	return false;
+	// }
+
+	// //memcpy from device output buffers to host output buffers
+	// buffers.copyOutputToHost();
+	return true;
 }	//end infer
 
 // calculate size of tensor

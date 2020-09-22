@@ -13,38 +13,43 @@
 #include "argsParser.h"
 #include "buffers.h"
 #include "common.h"
-#include "logger.h"
+
 
 namespace autocrane {
 
-class Logger : public nvinfer1::ILogger {
-public:
-	nvinfer1::ILogger& getTRTLogger() {
-		return *this;
-	}
+// class Logger : public nvinfer1::ILogger {
+// public:
+// 	nvinfer1::ILogger& getTRTLogger() {
+// 		return *this;
+// 	}
 
-	void log(Severity severity, const char* msg) override {
-		//suppress info level messages
-		if (severity != Severity::kINFO) {
-			std::cout << msg << std::endl;
-		}
-	}
+// 	void log(Severity severity, const char* msg) override {
+// 		//suppress info level messages
+// 		if (severity != Severity::kINFO) {
+// 			std::cout << msg << std::endl;
+// 		}
+// 	}
 
-};
+// };
 
 //destroy TensorRT objects if something goes wrong
-struct TRTDestroy{
-	template <typename T>
-	void operator()(T* obj) const {
-		if (obj) {
-			obj->destroy();
-		}
-	}
-};
+// struct TRTDestroy{
+// 	template <typename T>
+// 	void operator()(T* obj) const {
+// 		if (obj) {
+// 			obj->destroy();
+// 		}
+// 	}
+// };
 
+
+// template<typename T>
+// using TRTUniquePtr = std::unique_ptr<T, TRTDestroy>;
+template <typename T>
+using SampleUniquePtr = std::unique_ptr<T, samplesCommon::InferDeleter>;
 
 template<typename T>
-using TRTUniquePtr = std::unique_ptr<T, TRTDestroy>;
+using TRTUniquePtr = std::shared_ptr<T>;
 
 class TrtObjectDetector {
 public:
@@ -68,8 +73,8 @@ private:
 	std::string engineFile;
 	std::size_t size_engine;
 	// nvinfer1::ICudaEngine* mEngine;
-	TRTUniquePtr<nvinfer1::ICudaEngine> mEngine;
-	TRTUniquePtr<nvinfer1::IExecutionContext> mContext;
+	// TRTUniquePtr<nvinfer1::ICudaEngine> mEngine;
+	std::shared_ptr<nvinfer1::ICudaEngine> mEngine;
 	nvinfer1::Dims mInputDims; // dimension of input to network
 	std::vector<samplesCommon::PPM<3, 150, 150>> mPPMs; //!< PPMs of test images
 };
